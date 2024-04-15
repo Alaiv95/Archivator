@@ -1,13 +1,73 @@
 ﻿using ArchivatorUtils.constants;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace ArchivatorUtils.archivators;
 
 public class VarLengthArchivator : IArchivator
 {
-    public IEnumerable<char> Decode(IEnumerable<string> encodedData)
+    public string Decode(IEnumerable<string> encodedData)
     {
-        throw new NotImplementedException();
+        var decodingTable = Constants.DecodingTable;
+
+        var binaryData = ConvertListOfHexToBinary(encodedData);
+        var result = ConvertBinaryToText(decodingTable, binaryData);
+
+        return NormalizeText(result.ToString());
     }
+
+    private string ConvertBinaryToText(Dictionary<string, char> decodingTable, IEnumerable<string> binaryData)
+    {
+        var binaryString = string.Join("", binaryData);
+
+        var builder = new StringBuilder();
+        var result = new StringBuilder();
+
+        foreach (var value in binaryString)
+        {
+            builder.Append(value);
+            bool isFullValue = decodingTable.TryGetValue(builder.ToString(), out var fullValue);
+
+            if (isFullValue)
+            {
+                result.Append(fullValue);
+                builder.Clear();
+            }
+        }
+
+        return result.ToString();
+    }
+
+    private string NormalizeText(string text)
+    {
+        if (text is null)
+        {
+            throw new Exception("Input string was empty");
+        }
+
+        string pattern = @"!(\S)";
+        string normalized = Regex.Replace(text, pattern, m => m.Groups[1].Value.ToUpper());
+
+        return normalized;
+    }
+
+    private IEnumerable<string> ConvertListOfHexToBinary(IEnumerable<string> encodedData)
+    {
+        var res = new List<string>();
+
+        foreach ( var c in encodedData)
+        {
+            var val = string.Concat(c.Select(c =>
+            {
+                return Convert.ToString(Convert.ToInt32(c.ToString(), 16), 2).PadLeft(4, '0');
+            }));
+
+            res.Add(val);
+        }
+
+        return res;
+    }
+
 
     public IEnumerable<string> Encode(IEnumerable<char> fileData)
     {
@@ -52,7 +112,7 @@ public class VarLengthArchivator : IArchivator
             return Enumerable.Empty<string>();
         }
 
-        return chunkedString.Select(s => BinaryToHex(s));
+        return chunkedString.Select(BinaryToHex);
     }
 
     private string BinaryToHex(string binaryString)

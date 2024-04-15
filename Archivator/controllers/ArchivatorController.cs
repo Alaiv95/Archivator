@@ -14,7 +14,16 @@ public class ArchivatorController
     {
         var fileData = _fileReader.GetFileDataAsEnumerable(filePath);
         var archivedData = _archiver.Encode(fileData);
-        string fileName = _fileWriter.WriteEncodedFile(archivedData, ".varzip");
+        string fileName = _fileWriter.WriteEncodedFile(archivedData, extention: ".varzip");
+
+        return fileName;
+    }
+
+    public string UnzipFile(string filePath, string type)
+    {
+        var fileData = _fileReader.GetFileDataAsEnumerable(filePath, delimeter: " ");
+        var archivedData = _archiver.Decode(fileData);
+        string fileName = _fileWriter.WriteDecodedFile(archivedData, extention: ".txt");
 
         return fileName;
     }

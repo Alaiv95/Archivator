@@ -26,7 +26,7 @@ internal class Program
         // TODO - implement encoding
         string? fileName = actionType == "encode"
             ? _archivatorController.ZipFile(filePath, archivatorType)
-            : null;
+            : _archivatorController.UnzipFile(filePath, archivatorType);
 
         Console.WriteLine($"File succesfuly got {actionType}. Its name is {fileName}");
     }
@@ -65,6 +65,8 @@ internal class Program
 
         if (!fileExists)
         {
+            
+            
             throw new Exception($"File with given path {path} not found.");
         }
     }
